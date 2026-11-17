@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="bn"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>সৌদি কাজের ভিডিও</title>
+<link href="https://fonts.googleapis.com/css2?family=Anek+Bangla:wght@400;600;800&family=Noto+Sans+Arabic:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f2f5f4;--card:#fff;--ink:#14231f;--mute:#5d6f6a;--line:#d5dfdc;--brand:#0e6b57;--bi:#fff;--warn:#b45309}
+@media (prefers-color-scheme:dark){:root{color-scheme:dark;--bg:#0f1715;--card:#17221f;--ink:#e8f1ee;--mute:#9bb0aa;--line:#2b3b37;--brand:#3fbf9f;--bi:#06201a;--warn:#f0b35a}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16.5px/1.6 "Anek Bangla","Noto Sans Arabic",system-ui,sans-serif;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+.wrap{max-width:640px;margin:0 auto;padding:14px}
+header{display:flex;justify-content:space-between;align-items:center;gap:10px}
+h1{font-size:1.4rem;font-weight:800;margin:0}
+select,input,textarea,button{font:inherit;color:inherit}
+select,input,textarea{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:var(--card);margin:4px 0 10px}
+header select{width:auto;margin:0}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px;margin:12px 0}
+label{font-weight:600;font-size:.92rem}
+.btn{background:var(--brand);color:var(--bi);border:0;border-radius:8px;padding:11px 16px;font-weight:700;cursor:pointer;text-decoration:none;display:inline-block}
+.btn.alt{background:transparent;color:var(--ink);border:1px solid var(--line)}
+.row{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+video{width:100%;max-height:260px;border-radius:8px;background:#0c1412;margin-bottom:8px}
+.mute{color:var(--mute);font-size:.9rem}
+.tag{display:inline-block;border:1px solid var(--line);border-radius:99px;padding:1px 10px;font-size:.82rem;margin:0 4px 4px 0}
+.msg{border-left:4px solid var(--brand);padding:8px 12px;background:var(--card);border-radius:6px;margin:12px 0}
+:focus-visible{outline:3px solid var(--brand);outline-offset:2px}
+</style></head>
+<body><div class="wrap" id="app"></div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script>
+/* ===== কনফিগ: Supabase প্রজেক্ট থেকে দুটি মান বসান ===== */
+const SUPABASE_URL='https://mhkdextbymjbjbmiwomt.supabase.co', SUPABASE_KEY='sb_publishable_Ws1g-IkgHr79WezEvsc7kw_raM7HApm';
+const ADMIN_WA='966568494174';
+const LICENCE='Milad International Ltd · International Recruiting Agent RL-1927';
+const REP='Md. Faysal, authorized representative';
+const CATS=[['restaurant','রেস্টুরেন্ট','Restaurant','مطعم'],['cafe','ক্যাফে / কফি শপ','Cafe / coffee shop','مقهى'],['market','মার্কেট / সুপারশপ','Market / supermarket','سوق / سوبرماركت'],['cleaner','ক্লিনার','Cleaner','عامل نظافة']];
+const COUNTRIES=[['bd','বাংলাদেশ','Bangladesh','بنغلاديش'],['in','ভারত','India','الهند'],['np','নেপাল','Nepal','نيبال'],['pk','পাকিস্তান','Pakistan','باكستان']];
+const LANGS=[['bn','বাংলা'],['en','English'],['ar','العربية']], LI={bn:1,en:2,ar:3};
+const S={
+title:['সৌদি কাজের ভিডিও','Saudi Job Videos','وظائف السعودية بالفيديو'],
+phone:['ফোন নম্বর (দেশের কোডসহ, যেমন +8801...)','Phone (with country code, e.g. +8801...)','الهاتف (مع رمز الدولة)'],
+sendotp:['কোড পাঠান','Send code','إرسال الرمز'],code:['SMS-এর কোড','SMS code','رمز الرسالة'],verify:['লগইন','Log in','دخول'],
+role:['আপনি কে?','Who are you?','من أنت؟'],worker:['কর্মী (কাজ খুঁজছি)','Worker (looking for work)','عامل'],employer:['নিয়োগকর্তা','Employer','صاحب عمل'],
+name:['পূর্ণ নাম','Full name','الاسم الكامل'],country:['দেশ','Country','الدولة'],category:['কাজের ধরন','Job type','نوع العمل'],
+exp:['অভিজ্ঞতা (বছর)','Experience (years)','الخبرة (سنوات)'],salary:['প্রত্যাশিত বেতন (রিয়াল)','Expected salary (SAR)','الراتب المتوقع (ريال)'],
+video:['পরিচয়ের ভিডিও (১ মিনিট)','Intro video (1 min)','فيديو تعريفي (دقيقة)'],submit:['ভিডিও জমা দিন','Submit video','إرسال الفيديو'],
+sent:['জমা হয়েছে। অনুমোদনের পর ভিডিও লাইভ হবে।','Submitted. Your video goes live after approval.','تم الإرسال، سيظهر بعد الموافقة.'],
+state:['আপনার ভিডিওর অবস্থা','Your video status','حالة الفيديو'],pending:['অপেক্ষমাণ','Pending','قيد المراجعة'],approved:['অনুমোদিত','Approved','موافق عليه'],rejected:['বাতিল','Rejected','مرفوض'],
+company:['কোম্পানির নাম','Company name','اسم الشركة'],offer:['বেতনের প্রস্তাব (রিয়াল)','Salary offer (SAR)','الراتب المعروض'],details:['কাজের বিবরণ','Job details','تفاصيل العمل'],
+select:['এই কর্মী সিলেক্ট করুন','Select this worker','اختيار هذا العامل'],picked:['সিলেক্ট করা হয়েছে','Selected','تم الاختيار'],needco:['আগে কোম্পানির নাম লিখুন।','Enter your company name first.','أدخل اسم الشركة أولاً.'],
+pay:['পেমেন্টের নির্দেশনা','Payment instructions','تعليمات الدفع'],wa:['WhatsApp-এ জানান','Send on WhatsApp','أرسل عبر واتساب'],
+approve:['অনুমোদন','Approve','موافقة'],reject:['বাতিল','Reject','رفض'],pend:['অপেক্ষমাণ ভিডিও','Pending videos','فيديوهات قيد المراجعة'],picks:['নিয়োগকর্তার সিলেকশন','Employer selections','اختيارات أصحاب العمل'],
+contacted:['যোগাযোগ হয়েছে','Contacted','تم التواصل'],hired:['নিয়োগ হয়েছে','Hired','تم التوظيف'],none:['এখনো কিছু নেই।','Nothing here yet.','لا شيء بعد.'],
+out:['লগআউট','Log out','خروج'],yrs:['বছর','yrs','سنوات'],busy:['অপেক্ষা করুন...','Please wait...','يرجى الانتظار...'],cfg:['Supabase-এর মান বসানো হয়নি (ফাইলের শুরুতে)।','Supabase keys are not set (top of file).','لم يتم ضبط مفاتيح Supabase.']};
+const t=k=>S[k][LI[lang]-1];
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const cn=id=>(CATS.find(x=>x[0]==id)||[id,id,id,id])[LI[lang]], co=id=>(COUNTRIES.find(x=>x[0]==id)||[id,id,id,id])[LI[lang]];
+const opts=(a,sel)=>a.map(x=>`<option value="${x[0]}"${x[0]==sel?' selected':''}>${esc(x[LI[lang]])}</option>`).join('');
+const $=id=>document.getElementById(id);
+let lang='bn',sb=null,uid=null,uphone='',me=null,step='phone',phone='',msg='';
+const emp={company:'',offer:'',details:''};
+
+async function signed(rows,key){const paths=rows.map(r=>r[key]).filter(Boolean);if(!paths.length)return{};
+const {data}=await sb.storage.from('videos').createSignedUrls(paths,3600);const m={};(data||[]).forEach(d=>{m[d.path]=d.signedUrl});return m}
+const vid=u=>u?`<video controls playsinline preload="metadata" src="${u}"></video>`:'';
+const info=(w,name)=>`<p><strong>${esc(name)}</strong></p><span class="tag">${esc(cn(w.category))}</span><span class="tag">${esc(co(w.country))}</span><span class="tag">${w.experience_years} ${t('yrs')}</span><span class="tag">${w.expected_salary_sar} SAR</span>`;
+
+function loginView(){return step=='phone'
+?`<div class="card"><label>${t('phone')}</label><input id="ph" type="tel" autocomplete="tel" value="${esc(phone)}"><button class="btn" data-act="otp">${t('sendotp')}</button></div>`
+:`<div class="card"><label>${t('code')}</label><input id="cd" inputmode="numeric" autocomplete="one-time-code"><button class="btn" data-act="verify">${t('verify')}</button></div>`}
+function setupView(){return `<div class="card"><label>${t('name')}</label><input id="nm"><p>${t('role')}</p><div class="row"><button class="btn" data-act="role" data-r="worker">${t('worker')}</button><button class="btn alt" data-act="role" data-r="employer">${t('employer')}</button></div></div>`}
+
+async function workerView(){const {data:w}=await sb.from('worker_profiles').select('*').eq('user_id',me.id).maybeSingle();
+const st=w?`<div class="card"><strong>${t('state')}:</strong> <span class="tag">${t(w.status)}</span></div>`:'';
+return st+`<div class="card"><label>${t('country')}</label><select id="wc">${opts(COUNTRIES,w?.country)}</select><label>${t('category')}</label><select id="wk">${opts(CATS,w?.category)}</select><label>${t('exp')}</label><input id="we" type="number" min="0" value="${w?.experience_years??1}"><label>${t('salary')}</label><input id="ws" type="number" min="0" value="${w?.expected_salary_sar??1200}"><label>${t('video')}</label><input id="wv" type="file" accept="video/*"><button class="btn" data-act="submitw">${t('submit')}</button></div>`}
+
+async function employerView(){
+const {data:ws}=await sb.from('worker_public').select('*');const list=ws||[];
+const {data:ps}=await sb.from('selections').select('worker_id').eq('employer_id',me.id);const picked=new Set((ps||[]).map(p=>p.worker_id));
+const urls=await signed(list,'video_path');
+let pay='';if(picked.size){const {data:s}=await sb.from('settings').select('value').eq('key','payment_instructions').maybeSingle();if(s)pay=`<div class="card"><strong>${t('pay')}</strong><p>${esc(s.value).replace(/\n/g,'<br>')}</p></div>`}
+return `<div class="card"><label>${t('company')}</label><input data-emp="company" value="${esc(emp.company)}"><label>${t('offer')}</label><input data-emp="offer" type="number" value="${esc(emp.offer)}"><label>${t('details')}</label><textarea data-emp="details" rows="2">${esc(emp.details)}</textarea></div>${pay}`+
+(list.length?list.map(w=>`<div class="card">${vid(urls[w.video_path])}${info(w,w.first_name)}<div class="row">${picked.has(w.user_id)?`<span class="tag">${t('picked')}</span><a class="btn" target="_blank" rel="noopener" href="${waLink(w)}">${t('wa')}</a>`:`<button class="btn" data-act="pick" data-id="${w.user_id}">${t('select')}</button>`}</div></div>`).join(''):`<p class="mute">${t('none')}</p>`)}
+const waLink=w=>'https://wa.me/'+ADMIN_WA+'?text='+encodeURIComponent(`Worker ${w.first_name} (${cn(w.category)}, ${co(w.country)}) | Company: ${emp.company} | Offer: ${emp.offer||'-'} SAR | ${emp.details||''}`);
+
+async function adminView(){
+const {data:pw}=await sb.from('worker_profiles').select('*, profiles(full_name,phone)').eq('status','pending');const pend=pw||[];
+const {data:sl}=await sb.from('selections').select('*, worker_profiles(category,country,experience_years,expected_salary_sar, profiles(full_name,phone)), profiles:employer_id(full_name,phone)').order('created_at',{ascending:false});
+const urls=await signed(pend,'video_path');
+return `<h3>${t('pend')}</h3>`+(pend.length?pend.map(w=>`<div class="card">${vid(urls[w.video_path])}${info(w,w.profiles?.full_name)}<p class="mute">${esc(w.profiles?.phone)}</p><div class="row"><button class="btn" data-act="ok" data-id="${w.user_id}">${t('approve')}</button><button class="btn alt" data-act="no" data-id="${w.user_id}">${t('reject')}</button></div></div>`).join(''):`<p class="mute">${t('none')}</p>`)+
+`<h3>${t('picks')}</h3>`+((sl||[]).length?sl.map(s=>{const w=s.worker_profiles||{};return `<div class="card">${info(w,w.profiles?.full_name)}<p><strong>${esc(w.profiles?.phone)}</strong></p><p class="mute">${esc(s.company_name)} · ${esc(s.offered_salary_sar??'-')} SAR · ${esc(s.profiles?.full_name)} ${esc(s.profiles?.phone)}<br>${esc(s.job_details)}</p><span class="tag">${esc(s.status)}</span><div class="row"><button class="btn alt" data-act="sel" data-id="${s.id}" data-st="contacted">${t('contacted')}</button><button class="btn alt" data-act="sel" data-id="${s.id}" data-st="hired">${t('hired')}</button></div></div>`}).join(''):`<p class="mute">${t('none')}</p>`)}
+
+async function draw(){
+if(!sb){app.innerHTML=`<div class="msg">${t('cfg')}</div>`;return}
+app.innerHTML=`<p class="mute">${t('busy')}</p>`;
+let body='';try{
+if(!uid)body=loginView();else if(!me)body=setupView();else if(me.role=='worker')body=await workerView();else if(me.role=='employer')body=await employerView();else body=await adminView();
+}catch(e){msg=String(e.message||e)}
+app.innerHTML=`<header><h1>${t('title')}</h1><select id="lg" aria-label="Language">${LANGS.map(l=>`<option value="${l[0]}"${l[0]==lang?' selected':''}>${l[1]}</option>`).join('')}</select></header>${msg?`<div class="msg">${esc(msg)}</div>`:''}${body}${uid?`<div class="row"><button class="btn alt" data-act="out">${t('out')}</button></div>`:''}<p class="mute">${esc(LICENCE)}<br>${esc(REP)}</p>`;
+document.documentElement.dir=lang=='ar'?'rtl':'ltr';document.documentElement.lang=lang;msg=''}
+
+async function loadMe(){const {data}=await sb.from('profiles').select('*').eq('id',uid).maybeSingle();me=data}
+document.addEventListener('click',async e=>{const b=e.target.closest('[data-act]');if(!b||!sb)return;const a=b.dataset.act,id=b.dataset.id;
+try{
+if(a=='otp'){phone=$('ph').value.trim();const {error}=await sb.auth.signInWithOtp({phone});if(error)throw error;step='code'}
+if(a=='verify'){const {data,error}=await sb.auth.verifyOtp({phone,token:$('cd').value.trim(),type:'sms'});if(error)throw error;uid=data.user.id;uphone=data.user.phone?('+'+data.user.phone.replace('+','')):phone;await loadMe()}
+if(a=='role'){const n=$('nm').value.trim();if(!n)throw new Error(t('name'));const {error}=await sb.from('profiles').insert({id:uid,role:b.dataset.r,full_name:n,phone:uphone});if(error)throw error;await loadMe()}
+if(a=='submitw'){const f=$('wv').files[0];let path=null;
+if(f){path=`${uid}/${Date.now()}-${f.name.replace(/[^\w.]/g,'_')}`;const up=await sb.storage.from('videos').upload(path,f,{contentType:f.type});if(up.error)throw up.error}
+const row={user_id:uid,country:$('wc').value,category:$('wk').value,experience_years:+$('we').value||0,expected_salary_sar:+$('ws').value||0,status:'pending'};if(path)row.video_path=path;
+const {error}=await sb.from('worker_profiles').upsert(row);if(error)throw error;msg=t('sent')}
+if(a=='pick'){if(!emp.company.trim())throw new Error(t('needco'));const {error}=await sb.from('selections').insert({employer_id:uid,worker_id:id,company_name:emp.company,offered_salary_sar:+emp.offer||null,job_details:emp.details});if(error)throw error}
+if(a=='ok'||a=='no'){const {error}=await sb.from('worker_profiles').update({status:a=='ok'?'approved':'rejected'}).eq('user_id',id);if(error)throw error}
+if(a=='sel'){const {error}=await sb.from('selections').update({status:b.dataset.st}).eq('id',id);if(error)throw error}
+if(a=='out'){await sb.auth.signOut();uid=null;me=null;step='phone'}
+}catch(err){msg=err.message||String(err)}
+draw()});
+document.addEventListener('change',e=>{if(e.target.id=='lg'){lang=e.target.value;draw()}});
+document.addEventListener('input',e=>{const k=e.target.dataset.emp;if(k)emp[k]=e.target.value});
+
+(async()=>{
+if(SUPABASE_URL.startsWith('PASTE')){draw();return}
+sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+const {data}=await sb.auth.getSession();if(data.session){uid=data.session.user.id;uphone=data.session.user.phone?('+'+data.session.user.phone.replace('+','')):'';await loadMe()}
+draw()})();
+</script></body></html>
